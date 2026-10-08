@@ -2151,6 +2151,10 @@ async function loadMemberReviewers() {
   if (!container) return;
 
 
+  /* =======================================================
+     AUTHENTICATION CHECK
+  ======================================================= */
+
   if (!isMemberLoggedIn()) {
 
     container.innerHTML = `
@@ -2172,6 +2176,10 @@ async function loadMemberReviewers() {
   }
 
 
+  /* =======================================================
+     LOADING STATE
+  ======================================================= */
+
   container.innerHTML = `
     <article>
 
@@ -2189,7 +2197,14 @@ async function loadMemberReviewers() {
 
   try {
 
-    const { data, error } =
+    /* =====================================================
+       LOAD APPROVED REVIEWERS
+    ===================================================== */
+
+    const {
+      data,
+      error
+    } =
       await supabaseClient
         .from("reviewer_submissions")
         .select(`
@@ -2205,11 +2220,21 @@ async function loadMemberReviewers() {
           status,
           created_at
         `)
-        .eq("status", "approved")
-        .order("created_at", {
-          ascending: false
-        });
+        .eq(
+          "status",
+          "approved"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
 
+
+    /* =====================================================
+       DATABASE ERROR
+    ===================================================== */
 
     if (error) {
 
@@ -2228,6 +2253,10 @@ async function loadMemberReviewers() {
         ? data
         : [];
 
+
+    /* =====================================================
+       NO REVIEWERS
+    ===================================================== */
 
     if (reviewers.length === 0) {
 
@@ -2250,107 +2279,109 @@ async function loadMemberReviewers() {
     }
 
 
+    /* =====================================================
+       RENDER REVIEWERS
+    ===================================================== */
+
     container.innerHTML =
-      reviewers.map(reviewer => {
+      reviewers
+        .map(
+          (reviewer) => {
 
-        const description =
-          reviewer.description
-            ? `
-              <span>
-                ${escapeHTML(
-                  reviewer.description
-                )}
-              </span>
-            `
-            : "";
-
-
-        return `
-
-          <article>
-
-            <strong>
-              ${escapeHTML(
-                reviewer.title
-              )}
-            </strong>
+            const description =
+              reviewer.description
+                ? `
+                  <span>
+                    ${escapeHTML(
+                      reviewer.description
+                    )}
+                  </span>
+                `
+                : "";
 
 
-            <span>
+            return `
 
-              ${escapeHTML(
-                reviewer.subject
-              )}
+              <article>
 
-              •
-
-              ${escapeHTML(
-                reviewer.year_level
-              )}
-
-            </span>
+                <strong>
+                  ${escapeHTML(
+                    reviewer.title ||
+                    "Untitled Reviewer"
+                  )}
+                </strong>
 
 
-            ${description}
+                <span>
+
+                  ${escapeHTML(
+                    reviewer.subject ||
+                    "No subject"
+                  )}
+
+                  •
+
+                  ${escapeHTML(
+                    reviewer.year_level ||
+                    "No year level"
+                  )}
+
+                </span>
 
 
-            <div
-  style="
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    flex-wrap:wrap;
-  "
->
-
-  <span>
-    File:
-    ${escapeHTML(
-      submission.file_name
-    )}
-  </span>
+                ${description}
 
 
-  <button
-    type="button"
-    class="secondary-button"
-    data-verification-file="${escapeHTML(
-      submission.id
-    )}"
-  >
-    📄 Open File
-  </button>
+                <div
+                  style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:12px;
+                    flex-wrap:wrap;
+                  "
+                >
 
-</div>
+                  <span>
+                    File:
+                    ${escapeHTML(
+                      reviewer.file_name ||
+                      "Unknown file"
+                    )}
+                  </span>
+
+                </div>
 
 
-            <small>
-
-              Approved reviewer
-
-            </small>
+                <small>
+                  ✅ Approved reviewer
+                </small>
 
 
-            <button
-              type="button"
-              class="primary-button"
-              data-reviewer-file-id="${reviewer.id}"
-              data-reviewer-file-path="${escapeHTML(
-                reviewer.file_path
-              )}"
-              style="margin-top:10px;"
-            >
+                <button
+                  type="button"
+                  class="primary-button"
+                  data-reviewer-file-id="${escapeHTML(
+                    reviewer.id
+                  )}"
+                  data-reviewer-file-path="${escapeHTML(
+                    reviewer.file_path
+                  )}"
+                  style="margin-top:10px;"
+                >
 
-              📖 Open Reviewer
+                  📖 Open Reviewer
 
-            </button>
+                </button>
 
-          </article>
 
-        `;
+              </article>
 
-      }).join("");
+            `;
+
+          }
+        )
+        .join("");
 
 
   } catch (error) {
@@ -2382,9 +2413,7 @@ async function loadMemberReviewers() {
 
   }
 
-}
-
-/* =========================================================
+}/* =========================================================
    OPEN APPROVED MEMBER REVIEWER
 ========================================================= */
 
